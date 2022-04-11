@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using olo.Models;
 using olo.Services;
 
 
@@ -11,9 +11,16 @@ namespace olo.Controllers
     {
         [HttpGet]
         [Route("WordWrap/{word}/{length}")]
-        public List<string> TestWordWrap(string word, int length)
+        public WordWrapModel TestWordWrap(string word, int length)
         {
-            return TextService.WordWrap(word, length);
+            try
+            {
+                return TextService.WordWrap(word, length);
+            }
+            catch (Exception exception)
+            {
+                return new WordWrapModel() { IsError = true, Msg = exception.Message };
+            }
         }
     }
 }
