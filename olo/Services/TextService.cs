@@ -1,51 +1,64 @@
-﻿namespace olo.Services
+﻿using olo.Models;
+
+namespace olo.Services
 {
     public static class TextService
     {
-        public static List<string> WordWrap(string text, int length)
+        public static WordWrapModel WordWrap(string text, int length)
         {
             try
             {
+                //Exception handling
                 if (length == 0)
                     throw new ArgumentException("Length cannot be 0");
                 if (string.IsNullOrEmpty(text))
                     throw new ArgumentException($"{nameof(text)} - cannot be null");
+
+                var wordWrapModel = new WordWrapModel()
+                {
+                    OriginalText = text,
+                    LengthPerLine = length
+                };
+
                 if (text.Length <= length)
-                    return new List<string>() { text };
+                {
+                    wordWrapModel.ConvertedText = new List<string>() {text};
+                    return wordWrapModel;
+                }
 
 
-                var listToReturn = new List<string>();
+                wordWrapModel.ConvertedText = new List<string>();
                 var stringSplit = text.Split(" ");
                 var runningString = "";
-                var runningLength = 0;
+
                 foreach (var currentWord in stringSplit)
                 {
+                    if(!string.IsNullOrEmpty(runningString))
+                        runningString += " ";
 
-                    runningString += " ";
+                    var currentWordLength = currentWord.Length;
+                    int runningLength;
 
-                    var currentWordLenth = currentWord.Length;
-                    if (currentWordLenth > length)
+                    if (currentWordLength > length)
                     {
-                        if (currentWordLenth + runningString.Length > length)
+                        if (currentWordLength + runningString.Length > length && !string.IsNullOrEmpty(runningString))
                         {
-                            listToReturn.Add(runningString);
+                            wordWrapModel.ConvertedText.Add(runningString);
                             runningString = "";
                         }
 
-                        var c = 0;
                         foreach (var cw in currentWord)
                         {
                             runningLength = runningString.Length + cw.ToString().Length;
                             if (runningLength <= length)
-                                runningString += $"{cw}";
+                                runningString += cw;
                             else
                             {
-                                listToReturn.Add($"{runningString}");
-                                runningString = cw.ToString();
-                                c = 0;
-                            }
+                                if (!string.IsNullOrEmpty(runningString))
+                                    wordWrapModel.ConvertedText.Add(runningString);
 
-                            c++;
+                                runningString = cw.ToString();
+                            }
                         }
                         continue;
                     }
@@ -55,21 +68,27 @@
                     if (runningLength < length)
                     {
                         runningString += $"{currentWord}";
-                        listToReturn.Add(runningString);
+                        if (!string.IsNullOrEmpty(runningString))
+                            wordWrapModel.ConvertedText.Add(runningString);
                         runningString = "";
                     }
                     else
                     {
-                        listToReturn.Add($"{runningString}");
+                        if (!string.IsNullOrEmpty(runningString))
+                            wordWrapModel.ConvertedText.Add(runningString);
+
                         runningString = currentWord;
                     }
                 }
 
-                return listToReturn;
+                if(!string.IsNullOrEmpty(runningString))
+                    wordWrapModel.ConvertedText.Add(runningString);
+
+                return wordWrapModel;
             }
             catch (Exception ex)
             {
-                throw;
+                return new WordWrapModel() { IsError = true, Msg = ex.Message };
             }
         }
     }
